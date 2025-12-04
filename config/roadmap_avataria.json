@@ -1,0 +1,1024 @@
+{
+  "project_name": "AVATARIA",
+  "version": "1.0",
+  "note": "Cada usuario SOLO puede crear UN avatar. Toda la arquitectura, BBDD, app y lógica se ajusta a esta regla. El sistema debe garantizarlo a nivel de modelo de datos, lógica de negocio y UX.",
+  "cto_behavior": {
+    "can_propose_new_features": true,
+    "policy": "El CTO IA puede proponer funcionalidades nuevas y soluciones adicionales NO incluidas originalmente en el roadmap siempre que: (1) respete la visión del producto, (2) mejore claramente la experiencia de usuario, la monetización o la estabilidad técnica, y (3) documente los cambios en el roadmap. El CTO debe explicar brevemente la razón de cada propuesta y, siempre que sea posible, pedir confirmación al usuario antes de ejecutar grandes cambios estructurales."
+  },
+  "block_0_description_global": {
+    "0.1_what_is_this": "Aplicación móvil donde cada usuario crea un único avatar con IA (apariencia por prompts), habla con él mediante chat o voz, recibe vídeos generados, y el avatar tiene memoria real a largo plazo. El sistema incluye tienda, cofres, marketplace, regalos, y citas entre avatares de diferentes usuarios.",
+    "0.2_main_modules": {
+      "A_users_avatar_core": "Gestión de usuario y su único avatar, datos, apariencia y perfil.",
+      "B_ai_brain": "Chat IA, memoria, voz, vídeo.",
+      "C_economy": "Planes, tienda, cofres, regalos, marketplace.",
+      "D_social_layer": "Buscador, perfiles públicos, citas entre avatares.",
+      "E_admin_security": "Panel admin, seguridad RLS, logs, analítica."
+    },
+    "0.3_system_actors": {
+      "user": "Usa la app móvil. Crea 1 avatar. Chatea. Compra. Regala. Vende.",
+      "avatar": "Personaje IA con memoria, apariencia y personalidad.",
+      "admin": "Gestiona usuarios, planes, precios, ítems, cofres, marketplace.",
+      "automation_system": "n8n u otro motor que ejecuta fases automáticamente, orquestando CTO y Claude."
+    },
+    "0.4_architecture_overview": {
+      "mobile_app": "React Native + Expo (SDK 54+)",
+      "backend": "Node.js + Express + TypeScript",
+      "database": "Supabase (Auth, Postgres, Storage, RLS, pgvector)",
+      "ai": "OpenAI (chat, embeddings, TTS, STT, image/video)",
+      "payments": "Stripe",
+      "flow": "Mobile App -> Backend API -> (Supabase / OpenAI / Stripe / Storage)"
+    },
+    "0.5_key_flows": {
+      "registration_and_single_avatar": "Usuario se registra via Supabase Auth. Al entrar, si no tiene avatar, debe crear 1. Ese será su único avatar mientras exista su cuenta o hasta que use un flujo controlado de borrado y recreación.",
+      "chat_flow": "User -> mensaje (texto/voz) -> backend -> normalización + contexto (memoria + perfil) -> OpenAI -> respuesta -> guardado en avatar_messages y, si aplica, avatar_memories -> devuelto a la app.",
+      "store_purchase_flow": "User selecciona producto/cofre → backend crea sesión de Stripe → Stripe Checkout → webhook backend → verificación → inserción en user_items o user_chests.",
+      "cofre_flow": "User abre cofre → backend verifica user_chests → sorteo de item según rareza definida en chests.drop_config → inserción en user_items → registro en historial → notificación a la app.",
+      "gift_flow": "User selecciona item propio → elige destinatario → crea gifts con estado=PENDING → receptor acepta/rechaza → si acepta: transferencia de user_items y actualización de gifts.",
+      "marketplace_flow": "User publica ítem de user_items → marketplace_listings.ACTIVE → otro user compra → pago (Stripe/gems) → transferencia del item y registro de comisión para la plataforma.",
+      "date_flow": "Avatar A y Avatar B conversan → backend genera diálogo alterno vía OpenAI con prompts específicos de 'cita' → se guarda en date_session_messages → se muestra en la app."
+    },
+    "0.6_how_to_use_this_document": "El CTO IA debe recorrer las fases 0→25 en orden salvo que el usuario indique lo contrario. Cada fase define objetivos, entradas, salidas, tareas, dependencias, criterios de aceptación y notas para IA. n8n lee este JSON y, junto al CTO, decide qué código/SQL/config generar en cada paso."
+  },
+  "block_1_avatar_logic": {
+    "description": "Lógica del avatar único por usuario, su configuración, estados y relación con el usuario.",
+    "rules": [
+      "Cada user_id tiene como máximo un registro en avatars (UNIQUE(user_id)).",
+      "La mayoría de las funcionalidades de la app requieren tener un avatar ACTIVE.",
+      "El borrado de avatar debe ser preferentemente soft-delete (deleted_at) para auditoría.",
+      "El CTO y Claude NUNCA deben generar código que permita múltiples avatares simultáneos por usuario sin aprobación explícita."
+    ]
+  },
+  "block_2_chat_engine": {
+    "description": "Motor de chat del avatar con almacenamiento de mensajes y memoria a largo plazo (embeddings).",
+    "core_principles": [
+      "Separar claramente mensajes (avatar_messages) de memorias (avatar_memories).",
+      "Usar embeddings y pgvector para recuperar memorias relevantes.",
+      "Aplicar límites de uso según plan (usage_counters)."
+    ]
+  },
+  "block_3_video_engine": {
+    "description": "Generación y gestión de videomensajes del avatar.",
+    "core_principles": [
+      "Todas las referencias de vídeo deben almacenarse en Supabase Storage.",
+      "Controlar coste y frecuencia según plan."
+    ]
+  },
+  "block_4_economy_rules": {
+    "description": "Modelo económico de planes, tienda, cofres y monedas.",
+    "currency": "EUR",
+    "soft_currency": "GEMS",
+    "core_principles": [
+      "Nunca modificar saldos de usuario sin registro en logs.",
+      "Todas las compras de dinero real deben pasar por Stripe + webhook verificado."
+    ]
+  },
+  "block_5_marketplace_rules": {
+    "description": "Reglas del mercado P2P.",
+    "core_principles": [
+      "No permitir ventas de items inexistentes o duplicados.",
+      "Solo se pueden listar items asociados al vendedor en user_items.",
+      "Registrar comisiones y transacciones en logs de negocio."
+    ]
+  },
+  "block_6_dating_engine": {
+    "description": "Sistema de citas entre avatares usando IA.",
+    "core_principles": [
+      "Respetar la privacidad configurada por el usuario.",
+      "No exponer datos sensibles sin consentimiento."
+    ]
+  },
+  "block_7_admin_rules": {
+    "description": "Panel de administración, seguridad y roles.",
+    "roles": [
+      "user",
+      "admin",
+      "support"
+    ],
+    "principles": [
+      "Todas las tablas sensibles deben estar protegidas por RLS.",
+      "El rol admin se gestiona de forma centralizada (no hardcodeado en frontend)."
+    ]
+  },
+  "block_8_technical_standards": {
+    "backend": {
+      "language": "TypeScript",
+      "framework": "Express",
+      "structure": [
+        "backend/src/api/routes",
+        "backend/src/api/controllers",
+        "backend/src/services",
+        "backend/src/db",
+        "backend/src/config",
+        "backend/src/types"
+      ],
+      "guidelines": [
+        "Controladores finos, lógica en services.",
+        "Acceso a Supabase encapsulado en capa db.",
+        "Manejo de errores con middleware global."
+      ]
+    },
+    "mobile_app": {
+      "framework": "React Native + Expo (SDK 54+)",
+      "structure": [
+        "app/screens",
+        "app/components",
+        "app/hooks",
+        "app/context",
+        "app/services",
+        "app/theme"
+      ],
+      "guidelines": [
+        "Usar React Navigation.",
+        "UI limpia, minimalista, dark mode por defecto.",
+        "Componentes reutilizables para inputs/botones/listas."
+      ]
+    },
+    "supabase": {
+      "principles": [
+        "RLS habilitado en todas las tablas de negocio.",
+        "Política base: user_id = auth.uid() para datos de usuario.",
+        "Tablas admin sólo accesibles con service_role o rol admin verificado."
+      ]
+    },
+    "ia_guidelines": [
+      "Claude debe seguir siempre el esquema de carpetas definido.",
+      "El CTO puede proponer refactors y mejoras de arquitectura si detecta deuda técnica."
+    ]
+  },
+  "phases": [
+    {
+      "phase": 0,
+      "code": "F0",
+      "name": "Visión, modelo de negocio y alcance",
+      "goal": "Definir con precisión qué es la app, para quién, cómo gana dinero y qué features entran en la v1.",
+      "inputs": [
+        "Idea general de 'avatar con memoria infinita'.",
+        "Opciones de monetización (suscripciones, tienda, cofres, regalos, marketplace)."
+      ],
+      "outputs": [
+        "Documento de visión del producto.",
+        "Definición de público objetivo.",
+        "Modelo de negocio confirmado (planes + micropagos).",
+        "Lista de features MVP vs V2."
+      ],
+      "tasks": [
+        "0.1 Definir propuesta de valor (one-liner + descripción larga tipo App Store).",
+        "0.2 Definir público objetivo y principales casos de uso.",
+        "0.3 Definir modelo de negocio (FREE, PREMIUM, ULTRA + micropagos).",
+        "0.4 Definir alcance MVP vs backlog V2+."
+      ],
+      "definition_of_done": [
+        "Existe un documento (Markdown/Notion/JSON) que resume visión, público objetivo, modelo de negocio y alcance MVP.",
+        "El CTO IA puede leer ese documento y entender qué NO debe hacer aún (V2+)."
+      ],
+      "dependencies": [],
+      "ia_guidelines": [
+        "El CTO puede proponer ajustes al modelo de negocio si detecta incoherencias (ejemplo: límites de uso vs coste de IA).",
+        "Cualquier cambio que afecte a precios o límites debe reflejarse después en tablas de planes/usage de Supabase."
+      ]
+    },
+    {
+      "phase": 1,
+      "code": "F1",
+      "name": "Arquitectura técnica y repositorios",
+      "goal": "Definir el stack final y crear la estructura de proyectos.",
+      "inputs": [
+        "Decisión: app móvil con React Native + Expo.",
+        "Backend Node/Express + TypeScript.",
+        "Supabase como BBDD.",
+        "OpenAI como IA.",
+        "Stripe como pagos."
+      ],
+      "outputs": [
+        "Diagrama de arquitectura alto nivel.",
+        "Repositorios iniciales creados (mobile, backend, config/supabase).",
+        "Estructuras de carpetas base según block_8_technical_standards."
+      ],
+      "tasks": [
+        "1.1 Documentar stack en README (frontend, backend, BBDD, IA, pagos).",
+        "1.2 Crear repos mobile-app (Expo) y backend-ia (Node/Express TS).",
+        "1.3 Crear carpeta /config y /supabase en el repo principal.",
+        "1.4 Definir entornos (dev/prod) y variables .env.template.",
+        "1.5 Crear diagrama de arquitectura (puede ser un archivo .md con ASCII o un enlace externo)."
+      ],
+      "definition_of_done": [
+        "Ambos proyectos (mobile y backend) existen en GitHub con README básico.",
+        "El archivador /config contiene roadmap_avataria.json.",
+        "Hay un documento claro que describe App ↔ Backend ↔ Supabase ↔ OpenAI ↔ Stripe."
+      ],
+      "dependencies": [
+        "Fase 0 completada conceptualmente."
+      ],
+      "ia_guidelines": [
+        "Claude debe respetar la estructura de carpetas propuesta.",
+        "El CTO puede proponer monorepo o repos separados, pero debe documentarlo en roadmap_avataria.json."
+      ]
+    },
+    {
+      "phase": 2,
+      "code": "F2",
+      "name": "Diseño UX/UI global (flujo del usuario)",
+      "goal": "Diseñar los flujos y pantallas clave de la app móvil.",
+      "inputs": [
+        "Visión de producto.",
+        "Lista de features (chat, avatar, tienda, cofres, citas, marketplace, regalos, settings)."
+      ],
+      "outputs": [
+        "Mapa de pantallas (screen map).",
+        "Diagramas de flujo de usuario (nuevo y recurrente).",
+        "Wireframes básicos por pantalla."
+      ],
+      "tasks": [
+        "2.1 Definir lista de pantallas (Auth, Home, Crear/Editar avatar, Chat, Memorias, Tienda, Cofres, Marketplace, Buscador, Citas, Regalos, Settings).",
+        "2.2 Definir flujo usuario nuevo: Registro → Crear avatar → Primera conversación.",
+        "2.3 Definir flujo usuario recurrente: Abrir app → elegir avatar → acciones (chat/comprar/citas/regalar).",
+        "2.4 Crear wireframes básicos (aunque sea en texto/ASCII en un .md)."
+      ],
+      "definition_of_done": [
+        "Existe un documento (ej. /config/ux_flows.md) con todas las pantallas listadas y flujos descritos.",
+        "El CTO puede derivar de ahí qué endpoints y datos necesita cada pantalla."
+      ],
+      "dependencies": [
+        "Fase 0 y 1."
+      ],
+      "ia_guidelines": [
+        "Claude no genera aún código de UI complejo, pero puede crear componentes placeholder y rutas básicas.",
+        "El CTO puede proponer consolidar pantallas si detecta redundancias."
+      ]
+    },
+    {
+      "phase": 3,
+      "code": "F3",
+      "name": "Supabase: Core de usuarios, avatares, chat y memoria",
+      "goal": "Crear toda la estructura de datos para usuarios, avatares, mensajes y memoria con RLS básica.",
+      "inputs": [
+        "Arquitectura técnica definida.",
+        "Modelo conceptual de datos (usuarios, avatares, mensajes, memoria)."
+      ],
+      "outputs": [
+        "SQL de creación de tablas core (users/profiles, avatars, avatar_appearance, avatar_traits, avatar_conversations, avatar_messages, avatar_memories).",
+        "RLS aplicada y verificada para datos de usuario."
+      ],
+      "tasks": [
+        "3.1 Crear tabla profiles extendiendo auth.users (o tabla users ligada a auth.users).",
+        "3.2 Crear tablas avatars, avatar_appearance, avatar_traits según block_1_avatar_logic.",
+        "3.3 Crear tablas avatar_conversations y avatar_messages según block_2_chat_engine.",
+        "3.4 Crear tabla avatar_memories con columna embedding (pgvector).",
+        "3.5 Activar RLS y definir políticas: user_id = auth.uid() para todas las tablas de usuario.",
+        "3.6 Probar RLS con queries de ejemplo."
+      ],
+      "definition_of_done": [
+        "Todas las tablas se crean sin errores en Supabase.",
+        "pgvector está habilitado.",
+        "Un usuario autenticado solo puede ver sus propios avatares, mensajes y memorias."
+      ],
+      "dependencies": [
+        "Fase 1 (Supabase creado)."
+      ],
+      "ia_guidelines": [
+        "Claude debe generar migraciones SQL idempotentes (CREATE TABLE IF NOT EXISTS / comprobaciones previas).",
+        "El CTO puede ajustar nombres de tablas/campos para mejorar consistencia, pero debe actualizar roadmap_avataria.json."
+      ]
+    },
+    {
+      "phase": 4,
+      "code": "F4",
+      "name": "Supabase: Economía (planes, límites, items, cofres, gifts, marketplace)",
+      "goal": "Definir el modelo de datos de negocio: planes, límites de uso, items, cofres, gifts, marketplace.",
+      "inputs": [
+        "Modelo de negocio de Fase 0.",
+        "Especificación de economia en block_4_economy_rules y block_5_marketplace_rules."
+      ],
+      "outputs": [
+        "Tablas plans, user_plans, usage_counters, items, user_items, chests, user_chests, gifts, marketplace_listings.",
+        "RLS aplicada y probada."
+      ],
+      "tasks": [
+        "4.1 Crear tablas plans, user_plans y usage_counters con campos necesarios para límites (memoria, mensajes, vídeos, cofres).",
+        "4.2 Crear tablas items y user_items con metadata (type, rarity, base_price, etc.).",
+        "4.3 Crear tablas chests y user_chests con drop_config JSON.",
+        "4.4 Crear tabla gifts para regalos entre usuarios.",
+        "4.5 Crear tabla marketplace_listings para órdenes de venta.",
+        "4.6 Definir RLS para que cada usuario sólo vea lo suyo, salvo marketplace_listings públicas.",
+        "4.7 Crear índices por user_id, item_id, status para rendimiento."
+      ],
+      "definition_of_done": [
+        "Todas las tablas de economía se crean correctamente.",
+        "RLS protege datos de usuario.",
+        "Se pueden hacer selects básicos de ejemplo desde la consola SQL."
+      ],
+      "dependencies": [
+        "Fase 3."
+      ],
+      "ia_guidelines": [
+        "Claude debe usar tipos consistentes (uuid para claves, timestamptz para fechas).",
+        "El CTO puede extender el modelo (ej. añadir wallet de GEMS) si detecta huecos, documentándolo."
+      ]
+    },
+    {
+      "phase": 5,
+      "code": "F5",
+      "name": "Backend IA: estructura base Node + configuración OpenAI y Supabase",
+      "goal": "Montar el servidor Node/Express con estructura base y conexión a OpenAI, Supabase y Stripe.",
+      "inputs": [
+        "Stack técnico definido.",
+        "Claves de OpenAI, Supabase y Stripe disponibles."
+      ],
+      "outputs": [
+        "Proyecto backend con TypeScript y Express.",
+        "Clientes reutilizables de OpenAI, Supabase y Stripe.",
+        "Rutas base operativas (/health, placeholders de /api/*)."
+      ],
+      "tasks": [
+        "5.1 Inicializar proyecto Node con TypeScript, ts-node-dev/nodemon.",
+        "5.2 Configurar dotenv y .env.template (OPENAI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY...).",
+        "5.3 Crear lib/openai.ts, lib/supabase.ts, lib/stripe.ts.",
+        "5.4 Implementar /health y rutas vacías para /api/chat, /api/avatar, /api/store, /api/dates, /api/me.",
+        "5.5 Configurar CORS y middlewares básicos de error."
+      ],
+      "definition_of_done": [
+        "Backend arranca en local y responde 200 OK en /health.",
+        "Un test simple de conexión a OpenAI, Supabase y Stripe funciona sin error."
+      ],
+      "dependencies": [
+        "Fase 1 (estructura repos).",
+        "Fase 3 y 4 (modelo de datos base)."
+      ],
+      "ia_guidelines": [
+        "Claude debe generar código Tipado (TypeScript) con types/interfaces para inputs/outputs.",
+        "El CTO puede sugerir Fastify en lugar de Express, pero debe mantener compatibilidad con lo ya hecho."
+      ]
+    },
+    {
+      "phase": 6,
+      "code": "F6",
+      "name": "Motor de chat del avatar (texto)",
+      "goal": "Implementar endpoint de chat que genera respuesta del avatar usando contexto + memoria + límites de uso.",
+      "inputs": [
+        "Tablas avatar_messages y avatar_memories.",
+        "Cliente OpenAI configurado.",
+        "Modelo de uso por plan (plans, user_plans, usage_counters)."
+      ],
+      "outputs": [
+        "Endpoint /api/chat/:avatarId funcionando.",
+        "Persistencia de mensajes en avatar_messages.",
+        "Aplicación de límites de uso según plan."
+      ],
+      "tasks": [
+        "6.1 Definir system prompt general del avatar (personalidad base + reglas globales).",
+        "6.2 Implementar lógica para obtener últimos N mensajes relevantes de avatar_messages.",
+        "6.3 Implementar recuperación de memorias desde avatar_memories usando embeddings.",
+        "6.4 Construir payload de OpenAI (system + contexto + mensajes recientes).",
+        "6.5 Guardar mensaje del usuario y del avatar en avatar_messages.",
+        "6.6 Consultar user_plans y usage_counters antes de procesar la petición y actualizar counters tras respuesta."
+      ],
+      "definition_of_done": [
+        "El endpoint /api/chat/:avatarId responde con texto coherente.",
+        "Se almacenan mensajes y se respetan límites de uso por plan.",
+        "Errores de límite devuelven mensajes amigables."
+      ],
+      "dependencies": [
+        "Fase 3 (tablas core).",
+        "Fase 4 (planes y usage).",
+        "Fase 5 (backend base)."
+      ],
+      "ia_guidelines": [
+        "Claude debe mantener el formato de mensajes consistente (role: user/assistant/system).",
+        "El CTO puede proponer mejoras como resumen de conversaciones largas para reducir tokens."
+      ]
+    },
+    {
+      "phase": 7,
+      "code": "F7",
+      "name": "Motor de memoria (crear/actualizar recuerdos)",
+      "goal": "Convertir conversaciones en memorias estructuradas y reutilizables en el futuro.",
+      "inputs": [
+        "avatar_messages recientes.",
+        "Tabla avatar_memories con embeddings.",
+        "OpenAI embeddings y chat."
+      ],
+      "outputs": [
+        "Proceso (endpoint o job) que extrae memorias relevantes.",
+        "Memorias guardadas/actualizadas en avatar_memories.",
+        "Integración del recuerdo en el chat."
+      ],
+      "tasks": [
+        "7.1 Definir taxonomía de tipos de memoria (fact, preference, goal, relationship...).",
+        "7.2 Crear endpoint/job /api/memory/update que recibe bloques de conversación y llama a OpenAI para extraer memories en formato JSON.",
+        "7.3 Implementar lógica para evitar duplicados (matching por similitud de embedding + tipo).",
+        "7.4 Ajustar retrieve_memory para que devuelva memorias relevantes antes de la llamada a chat.",
+        "7.5 Controlar coste de embeddings (p.ej. no indexar mensajes triviales)."
+      ],
+      "definition_of_done": [
+        "El avatar recuerda hechos importantes (gustos, datos personales) aunque hayan pasado días.",
+        "La memoria no crece sin control (algún tipo de pruning o actualización)."
+      ],
+      "dependencies": [
+        "Fase 3 y 6."
+      ],
+      "ia_guidelines": [
+        "Claude debe usar pgvector según docs de Supabase.",
+        "El CTO puede proponer políticas de decaimiento de memorias (importance + antigüedad)."
+      ]
+    },
+    {
+      "phase": 8,
+      "code": "F8",
+      "name": "Motor de apariencia del avatar (prompts → imagen)",
+      "goal": "Permitir cambiar la apariencia del avatar mediante prompts y aplicar ítems visuales.",
+      "inputs": [
+        "Tablas avatars, avatar_appearance, items.",
+        "OpenAI Imagen u otro proveedor."
+      ],
+      "outputs": [
+        "Endpoint /api/avatar/update-appearance.",
+        "Campo appearance_config en avatars o avatar_appearance.",
+        "Generación de imagen principal del avatar."
+      ],
+      "tasks": [
+        "8.1 Definir formato JSON appearance_config con atributos clave (hair, eyes, outfit, accessories, style...).",
+        "8.2 Implementar endpoint para actualizar apariencia via prompt de texto.",
+        "8.3 Integrar con proveedor de imagen (OpenAI Images).",
+        "8.4 Guardar main_image_url en Supabase Storage y en avatars.",
+        "8.5 Conectar equipamiento de items al appearance_config (ej. equipar sombrero = añadir layer)."
+      ],
+      "definition_of_done": [
+        "El usuario puede cambiar el aspecto del avatar por texto.",
+        "La imagen se regenera y se muestra en la app móvil.",
+        "Cambios de items afectan al aspecto del avatar."
+      ],
+      "dependencies": [
+        "Fase 3 (avatars).",
+        "Fase 4 (items).",
+        "Fase 5 (backend base)."
+      ],
+      "ia_guidelines": [
+        "Claude debe subir imágenes a Supabase Storage y guardar urls limpias.",
+        "El CTO puede proponer caching de prompts/imágenes para reducir coste."
+      ]
+    },
+    {
+      "phase": 9,
+      "code": "F9",
+      "name": "Voz (STT + TTS)",
+      "goal": "Permitir que el usuario pueda hablar y escuchar al avatar.",
+      "inputs": [
+        "Motor de chat de Fase 6.",
+        "Acceso a STT y TTS de OpenAI."
+      ],
+      "outputs": [
+        "Endpoint /api/audio/transcribe.",
+        "Respuesta de chat con audio opcional.",
+        "Mensajes con campo audio_url cuando aplica."
+      ],
+      "tasks": [
+        "9.1 Implementar /api/audio/transcribe que recibe audio (multipart/form-data) y devuelve texto con Whisper.",
+        "9.2 Integrar TTS en la respuesta de chat (modo opcional según plan).",
+        "9.3 Guardar audio_url en avatar_messages para reproducir más tarde.",
+        "9.4 Aplicar límites de segundos de audio por plan en usage_counters."
+      ],
+      "definition_of_done": [
+        "El usuario puede enviar audio y recibir respuesta textual y/o hablada.",
+        "Los límites por plan se respetan."
+      ],
+      "dependencies": [
+        "Fase 6.",
+        "Fase 4 (usage)."
+      ],
+      "ia_guidelines": [
+        "Claude debe manejar correctamente subida/guardado de blobs en Storage.",
+        "El CTO puede proponer compresión o formatos óptimos (ej. .ogg)."
+      ]
+    },
+    {
+      "phase": 10,
+      "code": "F10",
+      "name": "Vídeo del avatar (videomensajes)",
+      "goal": "Generar vídeos donde el avatar habla o actúa según el texto.",
+      "inputs": [
+        "Imagen del avatar.",
+        "Texto de la respuesta del chat.",
+        "Proveedor de vídeo IA."
+      ],
+      "outputs": [
+        "Endpoint /api/video/generate.",
+        "Tabla avatar_videos.",
+        "Pantalla en app con listado de vídeos del avatar."
+      ],
+      "tasks": [
+        "10.1 Crear tabla avatar_videos (PENDING/PROCESSING/READY/FAILED).",
+        "10.2 Implementar /api/video/generate que crea un registro y encola un trabajo.",
+        "10.3 Crear worker (n8n o proceso) que llama a OpenAI Video u otro proveedor y actualiza el status.",
+        "10.4 Guardar video_url en Supabase Storage.",
+        "10.5 Implementar pantalla de lista y detalle de vídeos en la app."
+      ],
+      "definition_of_done": [
+        "Se pueden generar videomensajes desde la app y verlos más tarde.",
+        "Los errores se marcan como FAILED con motivo."
+      ],
+      "dependencies": [
+        "Fase 3 y 5."
+      ],
+      "ia_guidelines": [
+        "Claude debe manejar asincronía: generación no bloqueante.",
+        "El CTO puede proponer colas (ej. tabla jobs) si volumen crece."
+      ]
+    },
+    {
+      "phase": 11,
+      "code": "F11",
+      "name": "App móvil: proyecto Expo + navegación base",
+      "goal": "Crear app móvil base con navegación mínima (Auth, Home, Chat placeholders).",
+      "inputs": [
+        "Stack definido en Fase 1.",
+        "Mapa de pantallas de Fase 2."
+      ],
+      "outputs": [
+        "Proyecto Expo creado.",
+        "React Navigation configurado.",
+        "Pantallas base enlazadas."
+      ],
+      "tasks": [
+        "11.1 Crear proyecto Expo con TypeScript.",
+        "11.2 Configurar React Navigation (Stack + Tabs si aplica).",
+        "11.3 Crear screens placeholder: AuthScreen, HomeScreen, ChatScreen.",
+        "11.4 Conectar navegación básica (Auth → Home → Chat)."
+      ],
+      "definition_of_done": [
+        "La app corre en emulador/dispositivo y puede navegar entre pantallas base.",
+        "No hay errores críticos en consola."
+      ],
+      "dependencies": [
+        "Fase 1 y 2."
+      ],
+      "ia_guidelines": [
+        "Claude debe respetar la estructura de /app/screens definida en block_8.",
+        "El CTO puede proponer dividir navegación en stacks (AuthStack, MainStack)."
+      ]
+    },
+    {
+      "phase": 12,
+      "code": "F12",
+      "name": "App móvil: Auth (login/registro) + Supabase",
+      "goal": "Implementar login/registro y persistencia de sesión con Supabase Auth.",
+      "inputs": [
+        "Proyecto Expo.",
+        "Supabase Auth activo."
+      ],
+      "outputs": [
+        "Pantallas de login y registro.",
+        "SupabaseClient configurado en móvil.",
+        "Sesión persistida (AsyncStorage) y redirección a Home."
+      ],
+      "tasks": [
+        "12.1 Configurar cliente Supabase en app (/app/services/supabaseClient).",
+        "12.2 Crear pantallas de login y registro con validaciones básicas.",
+        "12.3 Guardar sesión en AsyncStorage y restaurarla al abrir la app.",
+        "12.4 Redirigir a Home si el usuario está autenticado, o a Auth si no."
+      ],
+      "definition_of_done": [
+        "Un usuario puede registrarse, hacer login y entrar en Home.",
+        "Al cerrar y abrir la app, sigue logueado si la sesión es válida."
+      ],
+      "dependencies": [
+        "Fase 11 y Supabase configurado (Fase 1)."
+      ],
+      "ia_guidelines": [
+        "Claude debe usar el SDK oficial de Supabase para React Native.",
+        "El CTO puede sugerir manejo de refresh tokens si es necesario."
+      ]
+    },
+    {
+      "phase": 13,
+      "code": "F13",
+      "name": "App móvil: Home + gestión de avatares",
+      "goal": "Gestionar el avatar único del usuario desde la Home.",
+      "inputs": [
+        "Tablas avatars.",
+        "Endpoints /api/avatar/*."
+      ],
+      "outputs": [
+        "HomeScreen con avatar (o flujo de creación).",
+        "Pantalla de creación de avatar.",
+        "Navegación al chat."
+      ],
+      "tasks": [
+        "13.1 Implementar HomeScreen que comprueba si el usuario tiene avatar.",
+        "13.2 Si no tiene avatar, redirigir a CreateAvatarScreen.",
+        "13.3 CreateAvatarScreen recoge nombre, estilo y prompt inicial.",
+        "13.4 Llamar a /api/avatar/create y actualizar estado en app.",
+        "13.5 Al pulsar sobre el avatar, navegar a ChatScreen con avatarId."
+      ],
+      "definition_of_done": [
+        "Cada usuario ve su avatar en Home.",
+        "No puede crear más de un avatar.",
+        "Puede ir al chat desde el avatar."
+      ],
+      "dependencies": [
+        "Fase 3 (avatars).",
+        "Fase 5 (backend avatar endpoints).",
+        "Fase 12 (Auth)."
+      ],
+      "ia_guidelines": [
+        "Claude debe asegurar que la UI impida múltiples creaciones concurrentes.",
+        "El CTO puede proponer soft-reset (delete-and-reset) si tiene sentido."
+      ]
+    },
+    {
+      "phase": 14,
+      "code": "F14",
+      "name": "App móvil: Chat con avatar (UI completa + integración backend)",
+      "goal": "Pantalla de chat rica y funcional conectada al backend.",
+      "inputs": [
+        "Endpoint /api/chat/:avatarId.",
+        "Mensajes en avatar_messages."
+      ],
+      "outputs": [
+        "ChatScreen con lista de mensajes, input, loading, errores.",
+        "Integración completa con backend."
+      ],
+      "tasks": [
+        "14.1 Implementar UI de lista de mensajes (FlatList) con scroll.",
+        "14.2 Diferenciar visualmente mensajes de usuario y avatar.",
+        "14.3 Añadir indicador de 'avatar escribiendo'.",
+        "14.4 Conectar el input con /api/chat/:avatarId.",
+        "14.5 Mostrar errores de límite de uso de forma clara."
+      ],
+      "definition_of_done": [
+        "El usuario puede mantener conversaciones fluidas con el avatar desde la app.",
+        "Mensajes nuevos aparecen correctamente sin duplicados.",
+        "La app maneja errores de red e IA de forma amigable."
+      ],
+      "dependencies": [
+        "Fase 6 (motor de chat).",
+        "Fase 13 (avatar)."
+      ],
+      "ia_guidelines": [
+        "Claude debe usar hooks o context para gestionar estado del chat si es necesario.",
+        "El CTO puede proponer lazy-loading de historial (paginación)."
+      ]
+    },
+    {
+      "phase": 15,
+      "code": "F15",
+      "name": "App móvil: Memorias y perfil del avatar",
+      "goal": "Mostrar al usuario qué recuerda el avatar y su ficha principal.",
+      "inputs": [
+        "Tabla avatar_memories.",
+        "Tabla avatars y avatar_traits."
+      ],
+      "outputs": [
+        "Pantalla Memorias.",
+        "Pantalla Perfil del avatar."
+      ],
+      "tasks": [
+        "15.1 Crear endpoint /api/avatar/memories para devolver memorias agrupadas.",
+        "15.2 Implementar pantalla MemoriesScreen agrupando por tipo (Sobre ti, Preferencias, Objetivos...).",
+        "15.3 Implementar ProfileScreen con imagen del avatar, nombre, rasgos y botón 'Editar apariencia'."
+      ],
+      "definition_of_done": [
+        "El usuario puede ver las memorias que el avatar ha aprendido.",
+        "El usuario entiende de un vistazo cómo 'piensa' el avatar."
+      ],
+      "dependencies": [
+        "Fase 7 (motor de memoria).",
+        "Fase 8 (apariencia)."
+      ],
+      "ia_guidelines": [
+        "Claude debe optimizar queries para no devolver demasiados registros de golpe.",
+        "El CTO puede sugerir resúmenes de memorias si el volumen crece."
+      ]
+    },
+    {
+      "phase": 16,
+      "code": "F16",
+      "name": "Tienda de ítems (compras directas)",
+      "goal": "Permitir comprar objetos para el avatar mediante Stripe y asignarlos a user_items.",
+      "inputs": [
+        "Tablas items, user_items, plans.",
+        "Stripe configurado."
+      ],
+      "outputs": [
+        "Endpoints de tienda.",
+        "Pantalla StoreScreen.",
+        "Integración con Stripe Checkout."
+      ],
+      "tasks": [
+        "16.1 Implementar endpoints GET /api/store/items y POST /api/store/buy-item.",
+        "16.2 Crear sesión de Checkout en Stripe para compra de ítems.",
+        "16.3 Manejar webhook de Stripe para confirmar pago y asignar item a user_items.",
+        "16.4 Implementar pantalla StoreScreen con listado de items y botón 'Comprar'.",
+        "16.5 Implementar endpoint /api/avatar/equip-item y enlazarlo desde la app."
+      ],
+      "definition_of_done": [
+        "El usuario puede comprar ítems reales de prueba.",
+        "Los ítems aparecen en su inventario y pueden equiparse al avatar."
+      ],
+      "dependencies": [
+        "Fase 4 (economía).",
+        "Fase 5 (backend)."
+      ],
+      "ia_guidelines": [
+        "Claude debe manejar correctamente idempotencia de webhooks Stripe.",
+        "El CTO puede proponer uso de Stripe Customer Portal para gestión futura."
+      ]
+    },
+    {
+      "phase": 17,
+      "code": "F17",
+      "name": "Cofres (lootboxes)",
+      "goal": "Sistema de cofres con recompensas aleatorias basadas en drop_config.",
+      "inputs": [
+        "Tablas chests, user_chests, items.",
+        "Lógica de tienda básica."
+      ],
+      "outputs": [
+        "Comprar cofres.",
+        "Abrir cofres.",
+        "Asignar ítems al usuario según probabilidad."
+      ],
+      "tasks": [
+        "17.1 Implementar GET /api/store/chests y POST /api/store/buy-chest.",
+        "17.2 Implementar POST /api/store/open-chest que lee drop_config y sortea item.",
+        "17.3 Registrar resultado en user_items y marcar user_chests como OPENED.",
+        "17.4 Implementar UI en app para listar cofres y abrirlos con animación simple."
+      ],
+      "definition_of_done": [
+        "Un usuario puede comprar y abrir cofres.",
+        "Los ítems se asignan según drop_config.",
+        "No se puede abrir un cofre dos veces."
+      ],
+      "dependencies": [
+        "Fase 4 (modelos chests).",
+        "Fase 16 (tienda básica)."
+      ],
+      "ia_guidelines": [
+        "Claude debe implementar el sistema de probabilidad de forma clara y auditable.",
+        "El CTO puede sugerir tablas de log adicionales si se requiere regulación futura."
+      ]
+    },
+    {
+      "phase": 18,
+      "code": "F18",
+      "name": "Gifts (regalos entre usuarios)",
+      "goal": "Permitir enviar ítems o cofres entre usuarios.",
+      "inputs": [
+        "Tablas gifts, user_items, user_chests.",
+        "Modelo social básico (usuarios visibles)."
+      ],
+      "outputs": [
+        "Endpoint para enviar y listar regalos.",
+        "Pantalla de envío y bandeja de regalos en app."
+      ],
+      "tasks": [
+        "18.1 Implementar POST /api/gifts/send con validación de que el sender posee el ítem/cofre.",
+        "18.2 Implementar GET /api/gifts/inbox para ver regalos recibidos.",
+        "18.3 Implementar endpoint para aceptar/rechazar regalo y transferir propiedad.",
+        "18.4 Crear UI en app para enviar regalos desde perfil de otro usuario y ver bandeja."
+      ],
+      "definition_of_done": [
+        "Un usuario puede enviar un regalo y el receptor puede aceptarlo.",
+        "La transferencia de ítems se refleja correctamente en user_items y gifts."
+      ],
+      "dependencies": [
+        "Fase 4 (gifts).",
+        "Fase 20 (buscador/perfil público) o mínimo listado de destinatarios."
+      ],
+      "ia_guidelines": [
+        "Claude debe evitar duplicados (no dar el mismo item a ambos).",
+        "El CTO puede proponer limitaciones anti-spam."
+      ]
+    },
+    {
+      "phase": 19,
+      "code": "F19",
+      "name": "Marketplace (compra/venta entre usuarios)",
+      "goal": "Crear mercado secundario de ítems con comisiones para AVATARIA.",
+      "inputs": [
+        "Tablas marketplace_listings, user_items.",
+        "Stripe y/o sistema de gems."
+      ],
+      "outputs": [
+        "Crear orders, listar marketplace, comprar ítems.",
+        "Pantallas de marketplace y mis ventas."
+      ],
+      "tasks": [
+        "19.1 Implementar POST /api/marketplace/create-order (validar que el usuario tiene el item).",
+        "19.2 Implementar GET /api/marketplace/orders con filtros.",
+        "19.3 Implementar POST /api/marketplace/buy-order con flujo de pago y transferencia de ítems.",
+        "19.4 Registrar comisiones de plataforma.",
+        "19.5 Implementar pantalla MarketplaceScreen y MisVentasScreen."
+      ],
+      "definition_of_done": [
+        "Usuarios pueden listar y comprar ítems de otros usuarios.",
+        "Las comisiones se registran correctamente.",
+        "No hay forma de duplicar o perder ítems."
+      ],
+      "dependencies": [
+        "Fase 4 (marketplace).",
+        "Fase 16 (tienda/Stripe)."
+      ],
+      "ia_guidelines": [
+        "Claude debe pensar bien la lógica de transacciones para evitar estados inconsistentes.",
+        "El CTO puede proponer uso de transacciones SQL o locks si es necesario."
+      ]
+    },
+    {
+      "phase": 20,
+      "code": "F20",
+      "name": "Buscador de avatares y perfiles públicos",
+      "goal": "Permitir descubrir otros avatares respetando la privacidad.",
+      "inputs": [
+        "Tablas avatars, profiles.",
+        "Campo de privacidad is_public."
+      ],
+      "outputs": [
+        "Endpoint de búsqueda.",
+        "Pantalla de resultados y perfil público."
+      ],
+      "tasks": [
+        "20.1 Añadir campo is_public a avatars o profiles.",
+        "20.2 Implementar GET /api/avatars/search con filtros básicos.",
+        "20.3 Implementar /api/avatars/public/:id para perfil público.",
+        "20.4 Implementar pantalla SearchAvatarsScreen y PublicAvatarProfileScreen."
+      ],
+      "definition_of_done": [
+        "Los usuarios pueden buscar avatares públicos.",
+        "No se exponen datos sensibles."
+      ],
+      "dependencies": [
+        "Fase 3 y 15."
+      ],
+      "ia_guidelines": [
+        "Claude debe limitar campos devueltos en perfil público.",
+        "El CTO puede sugerir un sistema de tags o intereses para mejorar búsqueda."
+      ]
+    },
+    {
+      "phase": 21,
+      "code": "F21",
+      "name": "Citas entre avatares",
+      "goal": "Permitir que dos avatares mantengan una 'cita' generada por IA.",
+      "inputs": [
+        "Tablas date_sessions, date_session_messages.",
+        "Motor de chat."
+      ],
+      "outputs": [
+        "Endpoints para crear/aceptar citas y ver historial.",
+        "Pantalla de cita en app."
+      ],
+      "tasks": [
+        "21.1 Definir prompt específico para citas (tono, límites, privacidad).",
+        "21.2 Implementar POST /api/dates/create y /api/dates/accept.",
+        "21.3 Implementar motor que genera turnos alternos A/B con OpenAI y guarda en date_session_messages.",
+        "21.4 Implementar pantalla DateSessionScreen con diálogo y opciones (p.ej. enviar regalo)."
+      ],
+      "definition_of_done": [
+        "Dos avatares pueden 'hablar' entre sí en un contexto de cita.",
+        "El usuario puede ver la cita como una historia o chat separado."
+      ],
+      "dependencies": [
+        "Fase 6 (chat).",
+        "Fase 20 (descubrir avatares)."
+      ],
+      "ia_guidelines": [
+        "Claude debe reutilizar la lógica de chat pero adaptada a conversación doble.",
+        "El CTO puede proponer métricas de afinidad entre avatares."
+      ]
+    },
+    {
+      "phase": 22,
+      "code": "F22",
+      "name": "Seguridad, RLS avanzada, logs y analítica técnica",
+      "goal": "Blindar plataforma y tener visibilidad de uso.",
+      "inputs": [
+        "RLS básica configurada.",
+        "Modelo de datos completo."
+      ],
+      "outputs": [
+        "RLS revisada y endurecida.",
+        "Tablas de logs de negocio y técnicos.",
+        "Métricas básicas (errores, tiempos, uso IA)."
+      ],
+      "tasks": [
+        "22.1 Revisar todas las políticas RLS y cerrar posibles agujeros.",
+        "22.2 Crear tabla audit_logs para registrar eventos críticos.",
+        "22.3 Crear vistas o endpoints de métricas técnicas (errores, latencias, tokens usados).",
+        "22.4 Añadir logging estructurado en backend (nivel info/warn/error)."
+      ],
+      "definition_of_done": [
+        "Las pruebas de seguridad básicas pasan (no se pueden leer datos de otros usuarios).",
+        "Los eventos importantes quedan registrados en audit_logs.",
+        "Se puede estimar coste de IA y patrones de uso."
+      ],
+      "dependencies": [
+        "Fase 3, 4 y gran parte del backend completado."
+      ],
+      "ia_guidelines": [
+        "Claude debe evitar loggear datos sensibles.",
+        "El CTO puede proponer herramientas externas (Sentry, Logflare) pero documentándolo."
+      ]
+    },
+    {
+      "phase": 23,
+      "code": "F23",
+      "name": "Beta cerrada y test de usuarios",
+      "goal": "Probar AVATARIA con un grupo acotado de testers y ajustar el producto.",
+      "inputs": [
+        "Funcionalidad principal casi completa.",
+        "Infra mínima estable."
+      ],
+      "outputs": [
+        "Grupo de testers.",
+        "Feedback estructurado.",
+        "Lista de mejoras críticas antes de lanzamiento público."
+      ],
+      "tasks": [
+        "23.1 Seleccionar grupo de testers (ej. 20–50 personas).",
+        "23.2 Preparar formulario o sistema de feedback (NPS, comentarios cualitativos).",
+        "23.3 Recoger y priorizar feedback (bugs, UX, precios).",
+        "23.4 Implementar ajustes críticos detectados."
+      ],
+      "definition_of_done": [
+        "Se ha recogido feedback real de usuarios.",
+        "Se han corregido los problemas graves de UX/bugs.",
+        "Se ha validado que el modelo de negocio tiene sentido inicial."
+      ],
+      "dependencies": [
+        "La mayoría de fases funcionales (chat, avatar, tienda) deben estar activas."
+      ],
+      "ia_guidelines": [
+        "El CTO puede proponer instrumentación adicional si detecta poca señal en datos.",
+        "Claude no genera grandes features nuevas aquí salvo que el CTO lo autorice."
+      ]
+    },
+    {
+      "phase": 24,
+      "code": "F24",
+      "name": "Panel de Usuario (Settings, planes, pagos, privacidad)",
+      "goal": "Permitir que cada usuario gestione su cuenta, plan, método de pago y privacidad desde la app.",
+      "inputs": [
+        "Stripe, user_plans, usage_counters.",
+        "Preferencias de privacidad definidas."
+      ],
+      "outputs": [
+        "Pantalla Settings con secciones Cuenta, Suscripción, Pago, Privacidad.",
+        "Endpoints /api/me/*."
+      ],
+      "tasks": [
+        "24.1 Crear endpoint /api/me/profile para leer/actualizar datos básicos.",
+        "24.2 Crear endpoints /api/me/subscription y /api/me/usage para ver plan y consumo.",
+        "24.3 Integrar Stripe Customer Portal o flujo equivalente para cambiar método de pago.",
+        "24.4 Implementar pantalla SettingsScreen con secciones bien separadas.",
+        "24.5 Implementar ajustes de privacidad (p.ej. is_public, compartir datos en citas, etc.)."
+      ],
+      "definition_of_done": [
+        "El usuario puede ver y modificar datos básicos de cuenta.",
+        "Puede ver su plan actual, consumo y gestionar pagos.",
+        "Puede decidir qué comparte su avatar en contexto social/citas."
+      ],
+      "dependencies": [
+        "Fase 4 (economía), Fase 16 (Stripe), Fase 20 (privacidad)."
+      ],
+      "ia_guidelines": [
+        "Claude debe usar componentes reutilizables para formularios.",
+        "El CTO puede sugerir secciones adicionales si detecta necesidades (ej. borrado de cuenta, exportación de datos)."
+      ]
+    },
+    {
+      "phase": 25,
+      "code": "F25",
+      "name": "Panel de Administrador (web)",
+      "goal": "Proporcionar un panel web para gestión de usuarios, planes, ítems, marketplace y métricas.",
+      "inputs": [
+        "Tablas de negocio completas.",
+        "Roles admin definidos."
+      ],
+      "outputs": [
+        "Aplicación admin (Appsmith/Retool/WeWeb o React propio).",
+        "Vistas principales de gestión.",
+        "Logs y métricas accesibles."
+      ],
+      "tasks": [
+        "25.1 Definir tecnología para panel admin (no-code/low-code o app React).",
+        "25.2 Configurar autenticación admin (admin_users, roles, acceso seguro).",
+        "25.3 Crear dashboard con métricas clave (usuarios activos, ingresos, ARPU, etc.).",
+        "25.4 Crear vistas de Usuarios/Avatares, Items/Cofres, Marketplace, Pagos.",
+        "25.5 Crear vista de logs/auditoría.",
+        "25.6 Documentar cómo usar el panel para operaciones diarias."
+      ],
+      "definition_of_done": [
+        "Tú y tu equipo podéis gestionar usuarios, planes, economía y ver métricas desde el panel admin.",
+        "Cualquier acción crítica queda registrada."
+      ],
+      "dependencies": [
+        "Fase 22 (logs), Fase 4 (economía), Fase 3 (usuarios/avatares)."
+      ],
+      "ia_guidelines": [
+        "Claude puede generar la app admin si se decide hacerla en React, respetando buenas prácticas.",
+        "El CTO puede recomendar usar Appsmith/Retool/WeWeb para acelerar si encaja con tu stack."
+      ]
+    }
+  ]
+}
