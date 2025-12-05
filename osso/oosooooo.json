@@ -1,0 +1,17 @@
+{
+  "name": "osso-config",
+  "version": "1.0.0",
+  "description": "Configuration file for osso module",
+  "settings": {
+    "environment": "development",
+    "debug": true,
+    "features": {
+      "logging": true,
+      "analytics": false
+    }
+  },
+  "metadata": {
+    "created": "2024-01-01",
+    "updated": "2024-01-15"
+  }
+}
