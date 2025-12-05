@@ -1,0 +1,23 @@
+{
+  "name": "prueba",
+  "version": "1.0.0",
+  "description": "Archivo de prueba para testear funcionalidades",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "title": "Item de ejemplo",
+        "active": true
+      },
+      {
+        "id": 2,
+        "title": "Otro item",
+        "active": false
+      }
+    ],
+    "metadata": {
+      "created": "2024-01-01",
+      "updated": "2024-01-15"
+    }
+  }
+}
