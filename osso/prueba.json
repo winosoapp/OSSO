@@ -1,0 +1,9 @@
+{
+  "name": "osso",
+  "version": "1.0.0",
+  "description": "OSSO configuration file",
+  "settings": {
+    "enabled": true,
+    "mode": "development"
+  }
+}
