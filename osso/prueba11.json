@@ -1,0 +1,13 @@
+{
+  "name": "prueba",
+  "version": "1.0.0",
+  "description": "Archivo de prueba",
+  "data": {
+    "test": true,
+    "items": [
+      "item1",
+      "item2",
+      "item3"
+    ]
+  }
+}
