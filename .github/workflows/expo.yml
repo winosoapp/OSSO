@@ -1,0 +1,85 @@
+# ═══════════════════════════════════════════════════════════════
+# EXPO BUILD & CHECK - GitHub Action
+# ═══════════════════════════════════════════════════════════════
+# Este workflow se ejecuta automáticamente cuando el CTO hace cambios
+# Verifica que la app compile correctamente con Expo SDK 54
+
+name: Expo Build Check
+
+on:
+  workflow_dispatch:  # Permite ejecutar manualmente (desde n8n)
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'constants/**'
+      - 'hooks/**'
+      - 'package.json'
+      - 'app.json'
+      - 'tsconfig.json'
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+      
+      - name: 📦 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: 📚 Instalar dependencias
+        run: npm ci || npm install
+      
+      - name: 🔍 Verificar TypeScript
+        run: npx tsc --noEmit
+        continue-on-error: false
+      
+      - name: 🧹 Lint Check
+        run: npm run lint || echo "No lint script"
+        continue-on-error: true
+      
+      - name: 🏗️ Expo Export (Web)
+        run: npx expo export --platform web
+        continue-on-error: false
+      
+      - name: ✅ Build exitoso
+        if: success()
+        run: echo "✅ La app compila correctamente con Expo SDK 54"
+      
+      - name: ❌ Build fallido
+        if: failure()
+        run: |
+          echo "❌ Error de compilación detectado"
+          echo "Revisa los logs anteriores para ver el error"
+          exit 1
+
+  # Job opcional para publicar en Expo (si tienes cuenta)
+  # publish-expo:
+  #   needs: build-check
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push'
+  #   
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #         cache: 'npm'
+  #     
+  #     - run: npm ci
+  #     
+  #     - name: Setup Expo
+  #       uses: expo/expo-github-action@v8
+  #       with:
+  #         expo-version: latest
+  #         token: ${{ secrets.EXPO_TOKEN }}
+  #     
+  #     - name: Publish to Expo
+  #       run: expo publish --non-interactive
