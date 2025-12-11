@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "OSSO App",
+    "slug": "osso-app",
+    "version": "1.0.0",
+    "scheme": "ossoapp",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.winosoapp.osso"
+    },
+    "android": {
+      "package": "com.winosoapp.osso",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "description": "Aplicación móvil OSSO desarrollada con React Native y Expo",
+    "owner": "winosoapp",
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
