@@ -1,11 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@/context/AuthContext';
 import Colors from '@/constants/Colors';
 
 export default function Welcome() {
   const router = useRouter();
+  const { signInWithGoogle, signInWithApple, loading } = useAuth();
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo iniciar sesión con Google');
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      await signInWithApple();
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo iniciar sesión con Apple');
+    }
+  };
 
   return (
     <LinearGradient
@@ -21,6 +41,7 @@ export default function Welcome() {
             style={[styles.button, styles.primaryButton]}
             onPress={() => router.push('/(auth)/signup')}
             activeOpacity={0.8}
+            disabled={loading}
           >
             <Text style={styles.primaryButtonText}>Crear Cuenta</Text>
           </TouchableOpacity>
@@ -29,8 +50,33 @@ export default function Welcome() {
             style={[styles.button, styles.secondaryButton]}
             onPress={() => router.push('/(auth)/signin')}
             activeOpacity={0.8}
+            disabled={loading}
           >
             <Text style={styles.secondaryButtonText}>Iniciar Sesión</Text>
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>o continúa con</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, styles.oauthButton]}
+            onPress={handleGoogleSignIn}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
+            <Text style={styles.oauthButtonText}>🔍 Google</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.oauthButton]}
+            onPress={handleAppleSignIn}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
+            <Text style={styles.oauthButtonText}> Apple</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -90,5 +136,31 @@ const styles = StyleSheet.create({
     color: '#FF6B35',
     fontSize: 18,
     fontWeight: '700',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#666',
+  },
+  dividerText: {
+    color: '#999',
+    paddingHorizontal: 16,
+    fontSize: 14,
+  },
+  oauthButton: {
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  oauthButtonText: {
+    color: '#2C2C2C',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
