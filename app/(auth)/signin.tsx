@@ -10,13 +10,13 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AuthService } from '@/services/authService';
+import { useAuth } from '@/context/AuthContext';
 import Colors from '@/constants/Colors';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, loading } = useAuth();
   const router = useRouter();
 
   const handleSignIn = async () => {
@@ -26,13 +26,21 @@ export default function SignIn() {
     }
 
     try {
-      setIsLoading(true);
-      await AuthService.signIn(email, password);
+      await signIn(email, password);
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al iniciar sesión');
-    } finally {
-      setIsLoading(false);
+      // Mensajes de error personalizados para Supabase
+      let errorMessage = 'Error al iniciar sesión';
+      
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'Email o contraseña incorrectos';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'Por favor confirma tu email antes de iniciar sesión';
+      } else if (error.message.includes('Too many requests')) {
+        errorMessage = 'Demasiados intentos. Por favor espera un momento';
+      }
+      
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -54,6 +62,7 @@ export default function SignIn() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={!loading}
             />
 
             <TextInput
@@ -63,16 +72,17 @@ export default function SignIn() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              editable={!loading}
             />
 
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleSignIn}
-              disabled={isLoading}
+              disabled={loading}
               activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>
-                {isLoading ? 'Cargando...' : 'Entrar'}
+                {loading ? 'Cargando...' : 'Entrar'}
               </Text>
             </TouchableOpacity>
 
