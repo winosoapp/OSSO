@@ -1,12 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { AuthService } from '@/services/authService';
-import * as SecureStore from 'expo-secure-store';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { AuthService } from '../services/authService';
+import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  user: any;
-  session: any;
-  isLoading: boolean;
-  isAuthenticated: boolean;
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -15,86 +14,96 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null);
-  const [session, setSession] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  // Verificar sesión al iniciar
   useEffect(() => {
-    // Verificar sesión al iniciar
     checkSession();
   }, []);
 
   const checkSession = async () => {
     try {
       const currentSession = await AuthService.getSession();
-      if (currentSession) {
-        setSession(currentSession);
-        setUser(currentSession.user);
-      }
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
     } catch (error) {
-      console.error('Error verificando sesión:', error);
+      console.error('Error checking session:', error);
+      setSession(null);
+      setUser(null);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
-      const { session: newSession } = await AuthService.signUp(email, password);
-      if (newSession) {
-        setSession(newSession);
-        setUser(newSession.user);
-        await SecureStore.setItemAsync('userToken', newSession.access_token);
-      }
+      setLoading(true);
+      const { session: newSession, user: newUser } = await AuthService.signUp(email, password);
+      setSession(newSession);
+      setUser(newUser ?? null);
+    } catch (error) {
+      console.error('Error signing up:', error);
+      throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
-      const { session: newSession } = await AuthService.signIn(email, password);
-      if (newSession) {
-        setSession(newSession);
-        setUser(newSession.user);
-        await SecureStore.setItemAsync('userToken', newSession.access_token);
-      }
+      setLoading(true);
+      const { session: newSession, user: newUser } = await AuthService.signIn(email, password);
+      setSession(newSession);
+      setUser(newUser ?? null);
+    } catch (error) {
+      console.error('Error signing in:', error);
+      throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
-    setIsLoading(true);
     try {
+      setLoading(true);
       await AuthService.signOut();
-      await SecureStore.deleteItemAsync('userToken');
       setSession(null);
       setUser(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const resetPassword = async (email: string) => {
-    await AuthService.resetPassword(email);
+    try {
+      await AuthService.resetPassword(email);
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
+    }
   };
 
-  const value = {
-    user,
-    session,
-    isLoading,
-    isAuthenticated: !!session,
-    signUp,
-    signIn,
-    signOut,
-    resetPassword,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+        resetPassword,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
