@@ -8,7 +8,7 @@ export default function Welcome() {
 
   return (
     <LinearGradient
-      colors={['#667eea', '#764ba2']}
+      colors={['#2d2d2d', '#1a1a1a']}
       style={styles.container}
     >
       <View style={styles.content}>
@@ -66,20 +66,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryButton: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FF6B35',
   },
   primaryButtonText: {
-    color: '#667eea',
+    color: '#fff',
     fontSize: 18,
     fontWeight: '700',
   },
   secondaryButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: '#FF6B35',
   },
   secondaryButtonText: {
-    color: '#fff',
+    color: '#FF6B35',
     fontSize: 18,
     fontWeight: '700',
   },
