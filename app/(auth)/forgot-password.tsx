@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AuthService } from '@/services/authService';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -40,7 +39,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -78,13 +77,14 @@ export default function ForgotPassword() {
           </View>
         </View>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#667eea',
   },
   keyboardView: {
     flex: 1,
