@@ -10,14 +10,14 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AuthService } from '@/services/authServiceMock';
+import { useAuth } from '@/context/AuthContext';
 import Colors from '@/constants/Colors';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { signUp, loading } = useAuth();
   const router = useRouter();
 
   const handleSignUp = async () => {
@@ -37,17 +37,25 @@ export default function SignUp() {
     }
 
     try {
-      setIsLoading(true);
-      await AuthService.signUp(email, password);
+      await signUp(email, password);
       Alert.alert(
-        'Cuenta creada',
-        'Por favor verifica tu email antes de continuar',
+        '¡Cuenta creada!',
+        'Hemos enviado un email de confirmación. Por favor verifica tu correo antes de iniciar sesión.',
         [{ text: 'OK', onPress: () => router.replace('/(auth)/signin') }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al crear cuenta');
-    } finally {
-      setIsLoading(false);
+      // Mensajes de error personalizados para Supabase
+      let errorMessage = 'Error al crear cuenta';
+      
+      if (error.message.includes('User already registered')) {
+        errorMessage = 'Este email ya está registrado';
+      } else if (error.message.includes('Password should be at least')) {
+        errorMessage = 'La contraseña es demasiado débil';
+      } else if (error.message.includes('Invalid email')) {
+        errorMessage = 'El formato del email no es válido';
+      }
+      
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -69,6 +77,7 @@ export default function SignUp() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={!loading}
             />
 
             <TextInput
@@ -78,6 +87,7 @@ export default function SignUp() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              editable={!loading}
             />
 
             <TextInput
@@ -87,16 +97,17 @@ export default function SignUp() {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
+              editable={!loading}
             />
 
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleSignUp}
-              disabled={isLoading}
+              disabled={loading}
               activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>
-                {isLoading ? 'Creando...' : 'Crear Cuenta'}
+                {loading ? 'Creando...' : 'Crear Cuenta'}
               </Text>
             </TouchableOpacity>
 
