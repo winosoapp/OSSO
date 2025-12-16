@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AuthService } from '@/services/authService';
+import { AuthService } from '@/services/authServiceMock';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
