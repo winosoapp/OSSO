@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import Colors from '@/constants/Colors';
 
 export default function ExploreScreen() {
   return (
@@ -20,7 +21,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#333',
+    color: Colors.light.secondary,
   },
   text: {
     fontSize: 16,
