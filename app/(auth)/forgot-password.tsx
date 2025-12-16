@@ -10,12 +10,12 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { AuthService } from '@/services/authServiceMock';
+import { useAuth } from '@/context/AuthContext';
 import Colors from '@/constants/Colors';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { resetPassword, loading } = useAuth();
   const router = useRouter();
 
   const handleResetPassword = async () => {
@@ -25,17 +25,22 @@ export default function ForgotPassword() {
     }
 
     try {
-      setIsLoading(true);
-      await AuthService.resetPassword(email);
+      await resetPassword(email);
       Alert.alert(
-        'Email enviado',
-        'Revisa tu correo para restablecer tu contraseña',
+        '✅ Email enviado',
+        'Revisa tu correo electrónico y sigue las instrucciones para restablecer tu contraseña.',
         [{ text: 'OK', onPress: () => router.back() }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al enviar email');
-    } finally {
-      setIsLoading(false);
+      let errorMessage = 'Error al enviar email';
+      
+      if (error.message.includes('User not found')) {
+        errorMessage = 'No existe una cuenta con ese email';
+      } else if (error.message.includes('Invalid email')) {
+        errorMessage = 'El formato del email no es válido';
+      }
+      
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -60,16 +65,17 @@ export default function ForgotPassword() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={!loading}
             />
 
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleResetPassword}
-              disabled={isLoading}
+              disabled={loading}
               activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>
-                {isLoading ? 'Enviando...' : 'Enviar Email'}
+                {loading ? 'Enviando...' : 'Enviar Email'}
               </Text>
             </TouchableOpacity>
 
