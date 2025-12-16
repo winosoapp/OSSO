@@ -31,10 +31,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
       
       - name: 📚 Instalar dependencias
-        run: npm ci || npm install
+        run: npm install
       
       - name: 🔍 Verificar TypeScript
         run: npx tsc --noEmit || echo "TypeScript check passed"
@@ -58,28 +57,3 @@ jobs:
           echo "❌ Error de compilación detectado"
           echo "Revisa los logs anteriores para ver el error"
           exit 1
-
-  # Job opcional para publicar en Expo (si tienes cuenta)
-  # publish-expo:
-  #   needs: build-check
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push'
-  #   
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         cache: 'npm'
-  #     
-  #     - run: npm ci
-  #     
-  #     - name: Setup Expo
-  #       uses: expo/expo-github-action@v8
-  #       with:
-  #         expo-version: latest
-  #         token: ${{ secrets.EXPO_TOKEN }}
-  #     
-  #     - name: Publish to Expo
-  #       run: expo publish --non-interactive
