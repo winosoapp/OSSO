@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AuthService } from '@/services/authService';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -52,7 +51,7 @@ export default function SignUp() {
   };
 
   return (
-    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -105,13 +104,14 @@ export default function SignUp() {
           </View>
         </View>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#667eea',
   },
   keyboardView: {
     flex: 1,
