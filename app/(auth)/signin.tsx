@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AuthService } from '@/services/authService';
+import Colors from '@/constants/Colors';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -65,9 +66,10 @@ export default function SignIn() {
             />
 
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button, isLoading && styles.buttonDisabled]}
               onPress={handleSignIn}
               disabled={isLoading}
+              activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>
                 {isLoading ? 'Cargando...' : 'Entrar'}
@@ -91,7 +93,7 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2d2d2d',
+    backgroundColor: '#2C2C2C',
   },
   keyboardView: {
     flex: 1,
@@ -102,9 +104,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   title: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '700',
-    color: '#fff',
+    color: '#ffffff',
     marginBottom: 40,
     textAlign: 'center',
   },
@@ -112,22 +114,32 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 12,
     fontSize: 16,
-    color: '#1a1a1a',
+    color: '#2C2C2C',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   button: {
     backgroundColor: '#FF6B35',
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -136,5 +148,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginTop: 8,
+    fontWeight: '600',
   },
 });
