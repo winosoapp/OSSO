@@ -40,77 +40,95 @@ export const AuthService = {
   },
 
   async signInWithGoogle() {
-    const redirectUrl = AuthSession.makeRedirectUri();
+    try {
+      const redirectUrl = AuthSession.makeRedirectUri();
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-        skipBrowserRedirect: false,
-      },
-    });
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: false,
+        },
+      });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // Abrir navegador para OAuth
-    if (data.url) {
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        redirectUrl
-      );
+      if (data.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl
+        );
 
-      if (result.type === 'success') {
-        const { url } = result;
-        const params = new URLSearchParams(url.split('#')[1]);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-
-        if (accessToken && refreshToken) {
-          await this.saveTokens(accessToken, refreshToken);
-          const { data: sessionData } = await supabase.auth.getSession();
-          return { session: sessionData.session, user: sessionData.session?.user };
+        if (result.type === 'success') {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) throw sessionError;
+          
+          if (sessionData.session) {
+            await this.saveTokens(
+              sessionData.session.access_token,
+              sessionData.session.refresh_token
+            );
+            return { 
+              session: sessionData.session, 
+              user: sessionData.session.user 
+            };
+          }
+        } else if (result.type === 'cancel' || result.type === 'dismiss') {
+          throw new Error('Inicio de sesión con Google cancelado');
         }
       }
-    }
 
-    throw new Error('OAuth cancelado o fallido');
+      throw new Error('No se pudo iniciar sesión con Google');
+    } catch (error) {
+      throw error;
+    }
   },
 
   async signInWithApple() {
-    const redirectUrl = AuthSession.makeRedirectUri();
+    try {
+      const redirectUrl = AuthSession.makeRedirectUri();
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo: redirectUrl,
-        skipBrowserRedirect: false,
-      },
-    });
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: false,
+        },
+      });
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // Abrir navegador para OAuth
-    if (data.url) {
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        redirectUrl
-      );
+      if (data.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl
+        );
 
-      if (result.type === 'success') {
-        const { url } = result;
-        const params = new URLSearchParams(url.split('#')[1]);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-
-        if (accessToken && refreshToken) {
-          await this.saveTokens(accessToken, refreshToken);
-          const { data: sessionData } = await supabase.auth.getSession();
-          return { session: sessionData.session, user: sessionData.session?.user };
+        if (result.type === 'success') {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) throw sessionError;
+          
+          if (sessionData.session) {
+            await this.saveTokens(
+              sessionData.session.access_token,
+              sessionData.session.refresh_token
+            );
+            return { 
+              session: sessionData.session, 
+              user: sessionData.session.user 
+            };
+          }
+        } else if (result.type === 'cancel' || result.type === 'dismiss') {
+          throw new Error('Inicio de sesión con Apple cancelado');
         }
       }
-    }
 
-    throw new Error('OAuth cancelado o fallido');
+      throw new Error('No se pudo iniciar sesión con Apple');
+    } catch (error) {
+      throw error;
+    }
   },
 
   async signOut() {
