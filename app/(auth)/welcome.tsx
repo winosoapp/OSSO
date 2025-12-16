@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import Colors from '@/constants/Colors';
 
 export default function Welcome() {
   const router = useRouter();
 
   return (
     <LinearGradient
-      colors={['#2d2d2d', '#1a1a1a']}
+      colors={['#2C2C2C', '#1a1a1a']}
       style={styles.container}
     >
       <View style={styles.content}>
@@ -19,6 +20,7 @@ export default function Welcome() {
           <TouchableOpacity
             style={[styles.button, styles.primaryButton]}
             onPress={() => router.push('/(auth)/signup')}
+            activeOpacity={0.8}
           >
             <Text style={styles.primaryButtonText}>Crear Cuenta</Text>
           </TouchableOpacity>
@@ -26,6 +28,7 @@ export default function Welcome() {
           <TouchableOpacity
             style={[styles.button, styles.secondaryButton]}
             onPress={() => router.push('/(auth)/signin')}
+            activeOpacity={0.8}
           >
             <Text style={styles.secondaryButtonText}>Iniciar Sesión</Text>
           </TouchableOpacity>
@@ -46,12 +49,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   logo: {
-    fontSize: 72,
+    fontSize: 80,
     marginBottom: 10,
   },
   tagline: {
-    fontSize: 24,
-    color: '#fff',
+    fontSize: 26,
+    color: '#ffffff',
     textAlign: 'center',
     marginBottom: 60,
     fontWeight: '600',
@@ -61,15 +64,20 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   button: {
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   primaryButton: {
     backgroundColor: '#FF6B35',
   },
   primaryButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: '700',
   },
