@@ -111,7 +111,7 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#667eea',
+    backgroundColor: '#2d2d2d',
   },
   keyboardView: {
     flex: 1,
@@ -137,21 +137,22 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     fontSize: 16,
+    color: '#1a1a1a',
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FF6B35',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
   },
   buttonText: {
-    color: '#667eea',
+    color: '#fff',
     fontSize: 18,
     fontWeight: '700',
   },
   linkText: {
-    color: '#fff',
+    color: '#FF6B35',
     fontSize: 16,
     textAlign: 'center',
     marginTop: 8,
