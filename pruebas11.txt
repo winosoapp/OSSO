@@ -1,0 +1,9 @@
+Este es el archivo EDITADO y será renombrado a pruebas11.txt
+
+Contenido actualizado:
+- Sistema de archivos funcionando
+- Edición completada correctamente
+- Próximo paso: renombrar
+
+Fecha: 2024
+Estado: Editado y listo para renombrar
