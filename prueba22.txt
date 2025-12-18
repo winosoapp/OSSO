@@ -1,5 +1,0 @@
-Archivo prueba22.txt creado.
-
-Este archivo será eliminado como parte de la prueba del sistema.
-
-Estado: Temporal - Será eliminado
