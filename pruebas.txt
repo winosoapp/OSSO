@@ -1,5 +1,9 @@
-Este es un archivo de prueba inicial.
-Creado para verificar el sistema de gestión de archivos.
+Este es el archivo EDITADO y será renombrado a pruebas11.txt
+
+Contenido actualizado:
+- Sistema de archivos funcionando
+- Edición completada correctamente
+- Próximo paso: renombrar
 
 Fecha: 2024
-Estado: Prueba inicial
+Estado: Editado y listo para renombrar
