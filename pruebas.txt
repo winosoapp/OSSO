@@ -1,0 +1,5 @@
+Este es un archivo de prueba inicial.
+Creado para verificar el sistema de gestión de archivos.
+
+Fecha: 2024
+Estado: Prueba inicial
