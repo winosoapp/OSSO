@@ -1,1 +1,29 @@
-{"expo": {"name": "OSSO", "slug": "osso-app", "version": "1.0.0", "orientation": "portrait", "icon": "./assets/icon.png", "userInterfaceStyle": "light", "splash": {"image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#ffffff"}, "ios": {"supportsTablet": true, "bundleIdentifier": "com.ossoapps.osso"}, "android": {"adaptiveIcon": {"foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#ffffff"}, "package": "com.ossoapps.osso"}, "web": {"favicon": "./assets/favicon.png"}}}
+{
+  "expo": {
+    "name": "SUDO",
+    "slug": "sudo-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sudoapp.sudo"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.sudoapp.sudo"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
