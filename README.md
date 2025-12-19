@@ -2,51 +2,41 @@
 
 Aplicación móvil desarrollada con React Native y Expo SDK 54.
 
-## 🚀 Tecnologías
-
-- **React Native** 0.76.5
-- **Expo SDK** 54
-- **TypeScript** 5.3.3
-- **React Navigation** 7.0
-- **Supabase** (Backend)
-
-## 📦 Instalación
+## 🚀 Instalación
 
 ```bash
 npm install
 ```
 
-## 🏃 Ejecutar
+## 📱 Ejecución
 
 ```bash
-# Desarrollo
+# Iniciar en modo desarrollo
 npm start
 
-# Android
+# Ejecutar en Android
 npm run android
 
-# iOS
+# Ejecutar en iOS
 npm run ios
 
-# Web
+# Ejecutar en Web
 npm run web
 ```
 
-## 📁 Estructura del Proyecto
+## 🛠️ Tecnologías
+
+- React Native 0.76.5
+- Expo SDK 54
+- TypeScript 5.3.3
+
+## 📂 Estructura del proyecto
 
 ```
-├── src/
-│   ├── screens/      # Pantallas de la app
-│   ├── components/   # Componentes reutilizables
-│   ├── navigation/   # Configuración de navegación
-│   ├── services/     # Servicios (API, Supabase)
-│   ├── types/        # Tipos TypeScript
-│   └── utils/        # Utilidades y constantes
-├── assets/           # Imágenes, fuentes, etc.
-├── App.tsx          # Componente principal
-└── app.json         # Configuración Expo
+/
+├── App.tsx              # Componente principal
+├── assets/              # Recursos (imágenes, fuentes, etc.)
+├── app.json            # Configuración de Expo
+├── package.json        # Dependencias
+└── tsconfig.json       # Configuración de TypeScript
 ```
-
-## 👨‍💻 Desarrollo
-
-Proyecto desarrollado por el equipo OSSO.
