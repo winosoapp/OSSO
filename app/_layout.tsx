@@ -1,20 +1,19 @@
 import { Stack } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
-        },
-        headerTintColor: colorScheme === 'dark' ? '#fff' : '#000',
-      }}
-    >
-      <Stack.Screen name="index" options={{ title: 'Inicio' }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <>
+      <StatusBar style="auto" />
+      <Stack>
+        <Stack.Screen 
+          name="index" 
+          options={{ 
+            title: 'OSSO',
+            headerShown: false 
+          }} 
+        />
+      </Stack>
+    </>
   );
 }
