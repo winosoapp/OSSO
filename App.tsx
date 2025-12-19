@@ -1,6 +1,6 @@
 /**
- * OSSO - Aplicación Principal
- * Plataforma de desarrollo automatizado con IA
+ * SUDO - Aplicación de Sudoku
+ * Juego de Sudoku interactivo con React Native
  */
 
 import React from 'react';
