@@ -4,10 +4,10 @@ Aplicación móvil desarrollada con React Native y Expo SDK 54.
 
 ## 🚀 Tecnologías
 
-- React Native 0.76.5
-- Expo SDK 54
-- TypeScript
-- Expo Router 4.0
+- **Expo SDK 54**
+- **React Native 0.76.5**
+- **TypeScript**
+- **Expo Router** (navegación basada en archivos)
 
 ## 📦 Instalación
 
@@ -15,45 +15,26 @@ Aplicación móvil desarrollada con React Native y Expo SDK 54.
 npm install
 ```
 
-## 🏃 Ejecución
+## 🏃 Ejecutar
 
 ```bash
-# Desarrollo
 npm start
-
-# Android
-npm run android
-
-# iOS
-npm run ios
-
-# Web
-npm run web
 ```
 
-## 📁 Estructura del Proyecto
+## 📱 Ejecutar en dispositivo
+
+- iOS: `npm run ios`
+- Android: `npm run android`
+- Web: `npm run web`
+
+## 📂 Estructura
 
 ```
-OSSO/
-├── app/
-│   ├── (tabs)/
-│   │   ├── _layout.tsx
-│   │   ├── index.tsx
-│   │   └── explore.tsx
-│   ├── _layout.tsx
-│   └── index.tsx
-├── assets/
-├── components/
-├── constants/
-├── hooks/
-├── app.json
-├── package.json
-└── tsconfig.json
+/app          # Rutas de la aplicación (Expo Router)
+/assets       # Imágenes e iconos
+/src          # Código fuente
+  /components # Componentes reutilizables
+  /services   # Servicios (API, Supabase, etc.)
+  /types      # Tipos TypeScript
+  /utils      # Utilidades
 ```
-
-## 📝 Estado del Proyecto
-
-**Estado:** Estructura base creada
-**Fase:** Planificación
-
-El proyecto está listo para comenzar a desarrollar funcionalidades.
