@@ -1,36 +1,60 @@
-import { createClient } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
+/**
+ * OSSO - Cliente de Supabase
+ * Configuración y cliente centralizado de Supabase
+ */
 
-// Obtener las variables de entorno
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl || '';
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey || '';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { config } from '../config';
+import { logger } from '../utils';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Supabase URL o Anon Key no configuradas en app.config.ts');
+class SupabaseService {
+  private static instance: SupabaseService;
+  private client: SupabaseClient | null = null;
+
+  private constructor() {
+    this.initializeClient();
+  }
+
+  public static getInstance(): SupabaseService {
+    if (!SupabaseService.instance) {
+      SupabaseService.instance = new SupabaseService();
+    }
+    return SupabaseService.instance;
+  }
+
+  private initializeClient() {
+    try {
+      if (!config.supabaseUrl || !config.supabaseAnonKey) {
+        logger.warn('Supabase credentials not configured');
+        return;
+      }
+
+      this.client = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: false,
+        },
+      });
+
+      logger.info('Supabase client initialized');
+    } catch (error) {
+      logger.error('Failed to initialize Supabase client', error);
+    }
+  }
+
+  public getClient(): SupabaseClient {
+    if (!this.client) {
+      throw new Error('Supabase client not initialized');
+    }
+    return this.client;
+  }
+
+  public isConfigured(): boolean {
+    return this.client !== null;
+  }
 }
 
-// Crear cliente de Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: undefined, // Por ahora sin persistencia de auth
-    autoRefreshToken: true,
-    persistSession: false,
-    detectSessionInUrl: false,
-  },
-});
-
-// Helper para verificar conexión
-export const testSupabaseConnection = async (): Promise<boolean> => {
-  try {
-    const { error } = await supabase.from('_test').select('*').limit(1);
-    if (error && error.message !== 'relation "public._test" does not exist') {
-      console.error('❌ Error de conexión a Supabase:', error);
-      return false;
-    }
-    console.log('✅ Supabase conectado correctamente');
-    return true;
-  } catch (error) {
-    console.error('❌ Error al conectar con Supabase:', error);
-    return false;
-  }
-};
+export const supabaseService = SupabaseService.getInstance();
+export const supabase = supabaseService.getClient();
+export default supabaseService;
