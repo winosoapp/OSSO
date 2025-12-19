@@ -1,8 +1,8 @@
-# 🚀 OSSO - Plataforma de Desarrollo Automatizado
+# 🎮 SUDO - Aplicación de Sudoku
 
 ## 📋 Descripción
 
-OSSO es una plataforma de desarrollo automatizado que utiliza React Native y Expo SDK 54 para crear aplicaciones móviles de forma eficiente.
+SUDO es una aplicación móvil de Sudoku desarrollada con React Native y Expo SDK 54. Ofrece una experiencia de juego intuitiva con generación automática de tableros, validación en tiempo real y múltiples niveles de dificultad.
 
 ## 🛠️ Stack Tecnológico
 
@@ -15,7 +15,7 @@ OSSO es una plataforma de desarrollo automatizado que utiliza React Native y Exp
 ## 📁 Estructura del Proyecto
 
 ```
-OSSO/
+SUDO/
 ├── src/
 │   ├── types/           # Tipos TypeScript globales
 │   ├── config/          # Configuración de la app
@@ -29,6 +29,16 @@ OSSO/
 ├── package.json         # Dependencias
 └── tsconfig.json        # Configuración TypeScript
 ```
+
+## 🎯 Funcionalidades
+
+- 🎲 Generación automática de tableros Sudoku
+- ✅ Validación en tiempo real
+- 📊 Múltiples niveles de dificultad (Fácil, Medio, Difícil, Experto)
+- 💾 Guardado de progreso
+- ⏱️ Temporizador de partida
+- 📝 Sistema de notas para celdas
+- 🎨 Interfaz intuitiva y responsive
 
 ## 🚀 Instalación
 
@@ -75,11 +85,11 @@ Crea un archivo `.env` con las siguientes variables:
 ```env
 EXPO_PUBLIC_SUPABASE_URL=tu_supabase_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_supabase_anon_key
-EXPO_PUBLIC_API_URL=https://api.osso.app
+EXPO_PUBLIC_API_URL=https://api.sudo.app
 EXPO_PUBLIC_ENVIRONMENT=development
 ```
 
-## 📚 Características
+## 📚 Características Técnicas
 
 - ✅ TypeScript strict mode
 - ✅ Sistema de tipos completo
@@ -90,6 +100,14 @@ EXPO_PUBLIC_ENVIRONMENT=development
 - ✅ Integración con Supabase
 - ✅ Sistema de diseño consistente
 - ✅ Navegación configurada
+
+## 🎮 Cómo Jugar
+
+1. Selecciona un nivel de dificultad
+2. Completa el tablero rellenando los números del 1 al 9
+3. Cada fila, columna y región 3x3 debe contener todos los números sin repetir
+4. Usa el sistema de notas para marcar posibilidades
+5. ¡Completa el tablero lo más rápido posible!
 
 ## 🎨 Sistema de Diseño
 
@@ -107,12 +125,11 @@ El proyecto incluye un sistema de diseño consistente con:
 
 ## 📄 Licencia
 
-Private - © 2024 OSSO
+Private - © 2024 SUDO
 
 ## 👥 Equipo
 
-- **CEO**: Estrategia y dirección
-- **CTO**: Desarrollo y arquitectura técnica
+Desarrollado con ❤️ usando el workflow OSSO
 
 ---
 
