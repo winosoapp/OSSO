@@ -2,15 +2,60 @@
 
 ## 📋 Descripción
 
-SUDO es una aplicación móvil de Sudoku desarrollada con React Native y Expo SDK 54. Ofrece una experiencia de juego intuitiva con generación automática de tableros, validación en tiempo real y múltiples niveles de dificultad.
+SUDO es una aplicación móvil de Sudoku desarrollada con React Native y Expo SDK 54. Ofrece una experiencia de juego completa con generación automática de tableros, validación en tiempo real, múltiples niveles de dificultad y sistema de estadísticas.
 
 ## 🛠️ Stack Tecnológico
 
 - **Framework**: React Native 0.76.5
 - **Platform**: Expo SDK 54
 - **Language**: TypeScript 5.3.3
-- **Backend**: Supabase
 - **Navigation**: React Navigation 6.x
+- **Storage**: AsyncStorage (persistencia local)
+- **State Management**: Context API
+
+## 🎯 Funcionalidades Principales
+
+### 🎲 Generación de Tableros
+- 4 niveles de dificultad: Fácil, Medio, Difícil, Experto
+- Algoritmo de generación garantiza tableros válidos y únicos
+- Distribución inteligente de números según dificultad
+
+### ✅ Sistema de Validación
+- Validación en tiempo real de números ingresados
+- Detección automática de errores
+- Feedback visual instantáneo
+- Verificación de reglas de Sudoku (filas, columnas, regiones 3x3)
+
+### ⏱️ Temporizador
+- Cronómetro automático por partida
+- Pausa al salir de la app
+- Registro de mejor tiempo por dificultad
+
+### 🆘 Sistema de Ayudas
+- **Verificar Tablero**: Identifica errores actuales
+- **Mostrar Pista**: Revela un número correcto
+- **Deshacer**: Retrocede movimientos anteriores
+- **Borrar Celda**: Limpia números ingresados
+
+### 💾 Persistencia de Datos
+- Guardado automático de partidas en progreso
+- Recuperación automática al abrir la app
+- Historial completo de partidas completadas
+- Sincronización en tiempo real
+
+### 📊 Estadísticas
+- Total de partidas jugadas y completadas
+- Mejor tiempo por nivel de dificultad
+- Tasa de éxito
+- Tiempo promedio de resolución
+- Racha de victorias
+
+### 🎨 Interfaz y Experiencia
+- Diseño intuitivo y minimalista
+- Modo oscuro y modo claro
+- Responsive para diferentes tamaños de pantalla
+- Animaciones suaves
+- Tutorial interactivo para nuevos usuarios
 
 ## 📁 Estructura del Proyecto
 
@@ -21,24 +66,22 @@ SUDO/
 │   ├── config/          # Configuración de la app
 │   ├── constants/       # Constantes (colores, spacing, etc.)
 │   ├── utils/           # Utilidades (logger, validators, formatters)
-│   ├── services/        # Servicios (API, Supabase)
+│   ├── services/        # Servicios (generación Sudoku, storage)
 │   ├── components/      # Componentes reutilizables
+│   │   ├── Board/       # Componentes del tablero
+│   │   ├── Controls/    # Controles de juego
+│   │   └── UI/          # Componentes de interfaz
 │   ├── screens/         # Pantallas de la app
-│   └── hooks/           # Custom hooks
+│   │   ├── Home/        # Pantalla principal
+│   │   ├── Game/        # Pantalla de juego
+│   │   ├── Statistics/  # Estadísticas
+│   │   └── Settings/    # Configuración
+│   ├── hooks/           # Custom hooks
+│   └── context/         # Context providers
 ├── App.tsx              # Componente principal
 ├── package.json         # Dependencias
 └── tsconfig.json        # Configuración TypeScript
 ```
-
-## 🎯 Funcionalidades
-
-- 🎲 Generación automática de tableros Sudoku
-- ✅ Validación en tiempo real
-- 📊 Múltiples niveles de dificultad (Fácil, Medio, Difícil, Experto)
-- 💾 Guardado de progreso
-- ⏱️ Temporizador de partida
-- 📝 Sistema de notas para celdas
-- 🎨 Interfaz intuitiva y responsive
 
 ## 🚀 Instalación
 
@@ -48,10 +91,6 @@ git clone https://github.com/winosoapp/OSSO.git
 
 # Instalar dependencias
 npm install
-
-# Configurar variables de entorno
-cp .env.example .env
-# Edita .env con tus credenciales de Supabase
 
 # Iniciar el proyecto
 npm start
@@ -74,20 +113,30 @@ npm run web
 
 # Verificar tipos TypeScript
 npm run type-check
+
+# Linting
+npm run lint
 ```
 
-## 🔧 Configuración
+## 🎮 Cómo Jugar
 
-### Variables de Entorno
+1. **Selecciona Dificultad**: Elige entre Fácil, Medio, Difícil o Experto
+2. **Completa el Tablero**: Rellena las celdas vacías con números del 1 al 9
+3. **Reglas**:
+   - Cada fila debe contener los números 1-9 sin repetir
+   - Cada columna debe contener los números 1-9 sin repetir
+   - Cada región 3x3 debe contener los números 1-9 sin repetir
+4. **Usa Ayudas**: Si te atascas, usa pistas o verificación
+5. **Completa**: ¡Termina lo más rápido posible y supera tu récord!
 
-Crea un archivo `.env` con las siguientes variables:
+## 🎨 Sistema de Diseño
 
-```env
-EXPO_PUBLIC_SUPABASE_URL=tu_supabase_url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_supabase_anon_key
-EXPO_PUBLIC_API_URL=https://api.sudo.app
-EXPO_PUBLIC_ENVIRONMENT=development
-```
+El proyecto incluye un sistema de diseño consistente:
+
+- **Colores**: Paleta completa con modos claro/oscuro
+- **Espaciado**: Sistema de spacing de 4px base
+- **Tipografía**: Font sizes y weights estandarizados
+- **Componentes**: Biblioteca de componentes reutilizables
 
 ## 📚 Características Técnicas
 
@@ -96,32 +145,22 @@ EXPO_PUBLIC_ENVIRONMENT=development
 - ✅ Configuración centralizada
 - ✅ Sistema de logging
 - ✅ Validadores y formatters
-- ✅ Cliente de API con timeout
-- ✅ Integración con Supabase
-- ✅ Sistema de diseño consistente
-- ✅ Navegación configurada
+- ✅ Algoritmos optimizados de generación y validación
+- ✅ Persistencia local eficiente
+- ✅ Context API para estado global
+- ✅ Custom hooks reutilizables
+- ✅ Navegación fluida
+- ✅ Performance optimizado
 
-## 🎮 Cómo Jugar
+## 🔧 Próximas Mejoras
 
-1. Selecciona un nivel de dificultad
-2. Completa el tablero rellenando los números del 1 al 9
-3. Cada fila, columna y región 3x3 debe contener todos los números sin repetir
-4. Usa el sistema de notas para marcar posibilidades
-5. ¡Completa el tablero lo más rápido posible!
-
-## 🎨 Sistema de Diseño
-
-El proyecto incluye un sistema de diseño consistente con:
-
-- **Colores**: Paleta definida en `src/constants/colors.ts`
-- **Espaciado**: Sistema de spacing en `src/constants/spacing.ts`
-- **Tipografía**: Font sizes y weights definidos
-
-## 🔐 Seguridad
-
-- No commitear el archivo `.env`
-- Usar variables de entorno para credenciales
-- Validar todas las entradas de usuario
+- [ ] Multijugador online
+- [ ] Desafíos diarios
+- [ ] Sistema de logros
+- [ ] Modo competitivo con ranking
+- [ ] Temas personalizables
+- [ ] Exportar/importar partidas
+- [ ] Análisis de estrategias
 
 ## 📄 Licencia
 
@@ -135,4 +174,5 @@ Desarrollado con ❤️ usando el workflow OSSO
 
 **Versión**: 1.0.0  
 **Expo SDK**: 54  
-**React Native**: 0.76.5
+**React Native**: 0.76.5  
+**Estado**: En desarrollo 🚀
